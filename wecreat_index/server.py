@@ -16,6 +16,8 @@ Endpoints
     GET  /api/scan         scan status + log
     POST /api/scan         start a scan (409 if one is already running)
     POST /api/shutdown     stop the server (the page's "Exit" button)
+    GET  /api/update       newer release on GitHub? (cached; ?force=1 checks now)
+    POST /api/update       install it and restart (packaged app only)
 """
 
 from __future__ import annotations
@@ -37,6 +39,7 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import urlsplit
 
 from . import NOTICE, __version__
+from . import update
 from .paths import default_data_dir, find_config, has_data, migrate_legacy_data, scan_command
 from .store import INDEX_FILENAME, STATE_FILENAME
 
@@ -137,6 +140,8 @@ class Handler(BaseHTTPRequestHandler):
     server_version = "LUOM-WhatsNew"
     runner: ScanRunner
     out_dir: str
+    #: One update at a time, however often the button is clicked.
+    update_lock = threading.Lock()
 
     # -- plumbing ---------------------------------------------------------- #
 
@@ -199,6 +204,9 @@ class Handler(BaseHTTPRequestHandler):
             self._json(HTTPStatus.OK, self.runner.status())
         elif path == "/api/info":
             self._json(HTTPStatus.OK, self._info())
+        elif path == "/api/update":
+            force = "force=1" in (urlsplit(self.path).query or "")
+            self._json(HTTPStatus.OK, update.check(self.out_dir, force=force))
         else:
             self._json(HTTPStatus.NOT_FOUND, {"error": "not found"})
 
@@ -207,7 +215,7 @@ class Handler(BaseHTTPRequestHandler):
             self._json(HTTPStatus.FORBIDDEN, {"error": "bad host"})
             return
         path = urlsplit(self.path).path
-        if path not in ("/api/scan", "/api/shutdown"):
+        if path not in ("/api/scan", "/api/shutdown", "/api/update"):
             self._json(HTTPStatus.NOT_FOUND, {"error": "not found"})
             return
         # A JSON content type cannot be sent cross-origin without a CORS
@@ -227,10 +235,44 @@ class Handler(BaseHTTPRequestHandler):
             threading.Thread(target=self.server.shutdown, daemon=True).start()
             return
 
+        if path == "/api/update":
+            self._install_update()
+            return
+
         if self.runner.start():
             self._json(HTTPStatus.ACCEPTED, self.runner.status())
         else:
             self._json(HTTPStatus.CONFLICT, dict(self.runner.status(), error="A scan is already running."))
+
+    def _install_update(self) -> None:
+        """Install the latest release, then stop so main() starts the new program."""
+        if not self.update_lock.acquire(blocking=False):
+            self._json(HTTPStatus.CONFLICT, {"error": "An update is already being installed."})
+            return
+        try:
+            # A running scan is using the program file that is about to change.
+            if self.runner.status()["running"]:
+                self._json(HTTPStatus.CONFLICT, {"error": "A scan is running - update when it has finished."})
+                return
+            info = update.check(self.out_dir, force=True)
+            if info.get("error") or not info.get("newer"):
+                self._json(HTTPStatus.CONFLICT, {"error": info.get("error") or "This is already the latest version."})
+                return
+            if not info.get("can_install"):
+                self._json(HTTPStatus.CONFLICT, {"error": info.get("install_blocker")})
+                return
+            try:
+                changed = update.install(info)
+            except update.UpdateError as exc:
+                log.warning("Update not installed: %s", exc)
+                self._json(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": str(exc)})
+                return
+        finally:
+            self.update_lock.release()
+        self._json(HTTPStatus.ACCEPTED, {"restarting": True, "version": info["latest"], "changed": changed})
+        log.info("Restarting as version %s.", info["latest"])
+        self.server.restart = True  # type: ignore[attr-defined]
+        threading.Thread(target=self.server.shutdown, daemon=True).start()
 
     def _info(self) -> Dict[str, Any]:
         return {
@@ -248,6 +290,30 @@ class Server(ThreadingHTTPServer):
     # already in use, so two copies would both "listen" on 8765. Elsewhere it
     # only skips the TIME_WAIT delay after a restart, which is wanted.
     allow_reuse_address = not sys.platform.startswith("win")
+    #: Set after an update: start the new program once this one has let go of the port.
+    restart = False
+
+
+def start_new_program(argv: List[str], out_dir: str) -> None:
+    """Launch the freshly installed program, detached from this one.
+
+    Its output goes to the log file in the data folder: the terminal (or
+    Terminal window) this copy was started from may be gone by then.
+    """
+    from .app import LOG_FILENAME
+
+    cmd = update.restart_command(argv)
+    log.info("Starting %s", " ".join(cmd))
+    try:
+        with open(os.path.join(out_dir, LOG_FILENAME), "a", encoding="utf-8") as out:
+            if sys.platform.startswith("win"):
+                subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=out, stderr=out, close_fds=True,
+                                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+            else:
+                subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=out, stderr=out, close_fds=True,
+                                 start_new_session=True)
+    except OSError as exc:
+        log.error("Could not start the new version: %s - start LUOM What's New again.", exc)
 
 
 def already_running(url: str) -> bool:
@@ -274,7 +340,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--no-browser", action="store_true", help="Do not open a browser tab")
     parser.add_argument("-v", "--verbose", action="store_true", help="Log every request")
     parser.add_argument("--version", action="version", version="LUOM What's New " + __version__)
-    args = parser.parse_args(argv)
+    raw_args = list(sys.argv[1:] if argv is None else argv)
+    args = parser.parse_args(raw_args)
 
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.INFO,
@@ -322,6 +389,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         log.info("Stopping.")
     finally:
         httpd.server_close()
+    if httpd.restart:
+        start_new_program(raw_args, out_dir)
     return 0
 
 

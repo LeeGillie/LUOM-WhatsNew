@@ -76,6 +76,8 @@
   </header>
 
   <main class="page">
+    <div class="news-strip update-bar" id="updateBar" role="status" hidden></div>
+
     <!-- ======================= Articles ======================= -->
     <section id="tab-articles" role="tabpanel" aria-labelledby="tabBtn-articles">
       <div class="news-strip" id="newsStrip" hidden></div>
@@ -168,6 +170,10 @@
               <option value="reuse">the same browser tab each time</option>
               <option value="new">a new browser tab each time</option>
             </select>
+          </label>
+          <label class="check" title="Asks GitHub once a day whether a newer LUOM What's New has been released. Nothing about you or your data is sent.">
+            <input type="checkbox" id="optCheckUpdates">
+            <span>Check for program updates</span>
           </label>
           <span class="muted view-options-note">Remembered in this browser.</span>
         </div>
@@ -275,7 +281,11 @@
         <li>WeCreat, Lumos Ultra and MakeIt are names and trademarks of their owner. They are used here only to describe what this tool works with.</li>
         <li>The LUOM name and artwork belong to the LUOM community.</li>
       </ul>
-      <p class="muted">Version <span id="aboutVersion">&mdash;</span>. Provided free, as is, without any warranty.</p>
+      <p class="muted">Version <span id="aboutVersion">&mdash;</span>. Provided free, as is, without any warranty.
+        <button type="button" class="link-btn" id="aboutCheckUpdates">Check for updates</button></p>
+      <p class="muted">Unless you turn it off under the search filters, the program asks GitHub once a day whether a newer version has been released.
+        Nothing about you or your data is sent. The code is open source (MIT) at
+        <a href="https://github.com/LeeGillie/LUOM-WhatsNew" target="_blank" rel="noopener">github.com/LeeGillie/LUOM-WhatsNew</a>.</p>
       <div class="modal-actions">
         <a class="btn btn-community" href="https://www.facebook.com/groups/lumosultraownersmakers" target="_blank" rel="noopener">LUOM on Facebook</a>
         <button type="button" class="btn btn-primary" id="aboutClose" autofocus>Close</button>

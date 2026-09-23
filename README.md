@@ -202,6 +202,7 @@ HTML/CSS/JS with no CDN, so it works offline.
       and reused for every article.
     * **the same browser tab each time.** One tab next to the app, reused.
     * **a new browser tab each time.**
+  * **Check for program updates.** On by default; see *Program updates* below.
 
     The page opens the article window or tab itself, under a name per mode, and
     keeps it as its *opener*. Browsers only let the opener send a window on
@@ -219,8 +220,41 @@ HTML/CSS/JS with no CDN, so it works offline.
 
 `--port`, `--host`, `--no-browser`, `-o/--out` and `-c/--config` are available.
 The server binds to loopback, ignores requests addressed to other host names,
-and only starts a scan or exits on a JSON `POST`, so other websites cannot
-trigger either.
+and only starts a scan, exits or installs an update on a JSON `POST`, so other
+websites cannot trigger any of them.
+
+### Program updates
+
+`wecreat_index/update.py`. When the page loads (and *Check for program updates*
+is ticked), `GET /api/update` asks GitHub's API for the latest release of
+`LeeGillie/LUOM-WhatsNew` and compares its tag with `__version__`. The answer is
+cached in the data folder (`update-check.json`) for 20 hours, so it is about one
+request a day; *Check for updates* in About bypasses the cache. Offline just
+means no banner. Nothing but the request itself is sent.
+
+If a newer release exists, a green bar offers **Update now**, **What's new** and
+**Skip this version** (remembered in `localStorage`). **Update now**
+(`POST /api/update`) is refused while a scan is running, then:
+
+1. downloads the release's `LUOM-WhatsNew-<version>.zip` and checks it against
+   the SHA-256 `digest` GitHub publishes for the asset;
+2. accepts only a flat `LUOM-WhatsNew/` folder that contains the `.pyz`;
+3. writes changed files next to the old ones and runs the new `.pyz version`,
+   which must report the release's version;
+4. swaps the files in with `os.replace`, the `.pyz` last, and leaves files it
+   does not know (the user's own) alone;
+5. stops the server and starts the new program with the same options; the page
+   waits for the new version to answer, then reloads.
+
+Any failed check leaves every file as it was. From a source checkout the bar only
+links to the release page. Replacing the running `.pyz` works on Windows because
+Python does not keep the archive open between reads.
+
+**Releasing** a new version: bump `__version__` in `wecreat_index/__init__.py`,
+run the tests and `python build.py`, then
+`gh release create v<version> dist/LUOM-WhatsNew-<version>.zip`. The tag must be
+the plain version (`v1.2.0`), and the zip must keep its name pattern, or the
+updater will not find it.
 
 ### Options
 
@@ -390,6 +424,7 @@ LUOM-WhatsNew\
     store.py        record building, sorting, state diff, JSON output
     paths.py        per-OS data folder, config lookup, legacy .\data migration
     server.py       python -m wecreat_index.server - local web UI + scan runner
+    update.py       GitHub release check and in-place update
     app.py          entry point of LUOM-WhatsNew.pyz (serve / scan)
     ui\             index.html, app.css, app.js, assets\ (no external assets)
   branding\         full-size LUOM artwork + make_assets.py
@@ -398,7 +433,8 @@ LUOM-WhatsNew\
     test_matcher.py matching rules, dates, diffing
     test_paths.py   data-folder choice and migration
     test_app.py     .pyz entry point, the build itself, second-launch handling
-                    (49 tests in all, offline)
+    test_update.py  update check, verified install, refusal cases
+                    (78 tests in all, offline)
   .vscode\          launch, tasks, settings
   build.py          builds dist\LUOM-WhatsNew.pyz and the zip to share
   config.json       editable match rules
@@ -455,6 +491,8 @@ folder means the UI still sees the same data.
 
 ## Notes
 
+* Besides the scan, the only network request is the daily update check to
+  GitHub (see *Program updates*).
 * The scan is read-only and hits the public API only — roughly four requests for
   the whole knowledge base.
 * If WeCreat ever renames the post type or taxonomy, change `post_type` /

@@ -218,6 +218,13 @@ code { font-family: var(--mono); font-size: .9em; }
 }
 .news-strip strong { color: var(--accent-text); }
 .news-strip .spacer { flex: 1; }
+.update-bar {
+  background: linear-gradient(90deg, var(--new-soft), color-mix(in srgb, var(--new-soft) 30%, var(--surface)));
+  border-color: color-mix(in srgb, var(--new) 30%, var(--border));
+}
+.update-bar strong { color: var(--new); }
+.update-bar .err { color: var(--danger); }
+.update-bar .spinner { display: inline-block; color: var(--new); }
 
 /* ------------------------------------------------------------------ filters */
 

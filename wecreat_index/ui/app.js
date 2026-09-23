@@ -80,7 +80,10 @@
   // ------------------------------------------------------------------ viewer preferences
   // Remembered in this browser only (localStorage); the page works without them.
 
-  const PREF_KEYS = { showOther: "luom-whatsnew.showOther", linkMode: "luom-whatsnew.linkMode" };
+  const PREF_KEYS = {
+    showOther: "luom-whatsnew.showOther", linkMode: "luom-whatsnew.linkMode",
+    checkUpdates: "luom-whatsnew.checkUpdates", skipVersion: "luom-whatsnew.skipVersion",
+  };
   function readPref(key, fallback) {
     try { const v = localStorage.getItem(key); return v === null ? fallback : v; } catch (_) { return fallback; }
   }
@@ -93,6 +96,8 @@
   const PREFS = {
     showOther: readPref(PREF_KEYS.showOther, "0") === "1",          // off by default
     linkMode: linkModeOf(readPref(PREF_KEYS.linkMode, "window")),   // separate window by default
+    checkUpdates: readPref(PREF_KEYS.checkUpdates, "1") === "1",    // on by default
+    skipVersion: readPref(PREF_KEYS.skipVersion, ""),                // "Skip this version"
   };
   /** Indexed, but not about the Lumos Ultra. */
   const isOther = (a) => a.confidence === "other";
@@ -763,6 +768,76 @@
     window.close(); // only works if the tab was opened by script; the message covers the rest
   }
 
+  // ------------------------------------------------------------------ program updates
+
+  let UPDATE = null;        // last /api/update answer
+  let updating = false;
+
+  /** Ask the server whether GitHub has a newer release. `fromUser`: say so either way. */
+  async function checkForUpdate(fromUser) {
+    let r;
+    try { r = await getJson(fromUser ? "api/update?force=1" : "api/update"); } catch (_) { r = null; }
+    UPDATE = r?.ok ? r.body : null;
+    if (!fromUser) { renderUpdateBar(); return; }
+    if (!UPDATE || UPDATE.error) toast(UPDATE?.error || "Could not check for updates.", true);
+    else if (!UPDATE.newer) toast(`You have the latest version (${UPDATE.current}).`);
+    renderUpdateBar(true);
+  }
+
+  function renderUpdateBar(fromUser, message) {
+    const bar = $("#updateBar");
+    const u = UPDATE;
+    const show = u && u.newer && !u.error && (fromUser || updating || (PREFS.checkUpdates && u.latest !== PREFS.skipVersion));
+    if (!show) { bar.hidden = true; return; }
+    const notes = `<a class="btn btn-sm btn-ghost" href="${esc(u.notes_url)}" target="_blank" rel="noopener">What's new</a>`;
+    let actions;
+    if (updating) actions = `<span class="spinner" aria-hidden="true"></span>`;
+    else if (u.can_install) {
+      actions = `${notes}
+        <button type="button" class="btn btn-sm btn-ghost" data-update="skip">Skip this version</button>
+        <button type="button" class="btn btn-sm btn-primary" data-update="install">Update now</button>`;
+    } else {
+      actions = `<span class="muted">${esc(u.install_blocker || "")}</span>
+        <a class="btn btn-sm btn-primary" href="${esc(u.notes_url)}" target="_blank" rel="noopener">Download page</a>
+        <button type="button" class="btn btn-sm btn-ghost" data-update="skip">Skip this version</button>`;
+    }
+    bar.innerHTML = `
+      <span>${message || `LUOM What's New <strong>${esc(u.latest)}</strong> is available &mdash; you have ${esc(u.current)}.`}</span>
+      <span class="spacer"></span>
+      ${actions}`;
+    bar.hidden = false;
+  }
+
+  async function installUpdate() {
+    if (updating) return;
+    updating = true;
+    const target = UPDATE.latest;
+    renderUpdateBar(false, `Downloading and checking LUOM What's New <strong>${esc(target)}</strong>&hellip;`);
+    let r;
+    try {
+      r = await getJson("api/update", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+    } catch (_) { r = { ok: false, body: { error: "Cannot reach the local server." } }; }
+    if (!r.ok) {
+      updating = false;
+      renderUpdateBar(false, `<span class="err">The update was not installed: ${esc(r.body?.error || `HTTP ${r.status}`)}</span>
+        Nothing was changed.`);
+      return;
+    }
+    renderUpdateBar(false, `Installed <strong>${esc(target)}</strong>. Restarting&hellip;`);
+    // The old server stops, the new one starts on the same address: wait for it, then reload.
+    const until = Date.now() + 60000;
+    while (Date.now() < until) {
+      await new Promise((res) => setTimeout(res, 1000));
+      try {
+        const info = await getJson("api/info");
+        if (info.ok && info.body?.version === target) { location.reload(); return; }
+      } catch (_) { /* not up yet */ }
+    }
+    updating = false;
+    renderUpdateBar(false, `<span class="err">Version ${esc(target)} was installed, but did not start by itself.</span>
+      Start LUOM What's New again the usual way.`);
+  }
+
   // ------------------------------------------------------------------ scanning
 
   let polling = 0;
@@ -902,6 +977,26 @@
       writePref(PREF_KEYS.linkMode, PREFS.linkMode);
       articleTab = null;   // the next article opens in the newly chosen way
     });
+    $("#optCheckUpdates").checked = PREFS.checkUpdates;
+    $("#optCheckUpdates").addEventListener("change", (e) => {
+      PREFS.checkUpdates = e.target.checked;
+      writePref(PREF_KEYS.checkUpdates, PREFS.checkUpdates ? "1" : "0");
+      if (PREFS.checkUpdates) checkForUpdate(false); else renderUpdateBar();
+    });
+
+    // Program update banner
+    $("#updateBar").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-update]");
+      if (!b || !UPDATE) return;
+      if (b.dataset.update === "install") installUpdate();
+      if (b.dataset.update === "skip") {
+        PREFS.skipVersion = UPDATE.latest;
+        writePref(PREF_KEYS.skipVersion, PREFS.skipVersion);
+        renderUpdateBar();
+        toast(`Version ${UPDATE.latest} skipped. Use "Check for updates" in About to see it again.`);
+      }
+    });
+    $("#aboutCheckUpdates").addEventListener("click", () => { $("#about").close(); checkForUpdate(true); });
 
     // Article links: "window" sends every WeCreat article to one separate
     // browser window, "reuse" to one tab; "new" leaves the links' own
@@ -1029,6 +1124,7 @@
       const r = await getJson("api/scan");
       if (r.body?.running) { setScanning(true); pollScan(); }
     } catch (_) { /* ignore */ }
+    if (PREFS.checkUpdates && !STOPPED) checkForUpdate(false);
   }
 
   boot();

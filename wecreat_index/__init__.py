@@ -6,7 +6,7 @@ articles live in the custom post type ``lsvr_kba`` and are exposed through the
 public WP REST API, so this package talks to the API rather than scraping HTML.
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 APP_NAME = "LUOM What's New"
 

@@ -9,8 +9,10 @@ article that matters for the WeCreat Lumos Ultra, newest first. Each time
 it checks the site, anything new or changed since the last check is
 highlighted at the top of the list.
 
-It runs on your own computer and opens in your web browser. It only reads
-the public help site; nothing is sent anywhere.
+It runs on your own computer and opens in your web browser. It reads the
+public help site and, once a day, asks GitHub whether a newer version of
+this program exists (you can turn that off). Nothing about you or your
+data is sent anywhere.
 
 
 WHAT THIS PROGRAM IS - AND IS NOT
@@ -47,6 +49,7 @@ WHAT'S IN THIS FOLDER
   start-luom-whatsnew.sh         run this on Linux
   LUOM-WhatsNew.ico              the LUOM icon, for a shortcut (see below)
   README.txt                     this file
+  LICENSE.txt                    the MIT license of the program's code
 
 If you used this program before under the name WhatsNewWecreat, your data
 is moved to the new folder automatically the first time you start it.
@@ -54,14 +57,24 @@ is moved to the new folder automatically the first time you start it.
 Keep these files together in one folder. Any folder is fine, for example
 Documents\LUOM What's New.
 
+On Windows, unzip the download first: right-click the zip file, choose
+"Extract All...", and pick the folder. Double-clicking a zip only shows
+what is inside it, and the program cannot start from there - it would say
+LUOM-WhatsNew.pyz was not found.
+
 
 STARTING IT
 -----------
 
-Windows:  double-click "Start LUOM What's New".
+Windows:  double-click "Start LUOM What's New". The first time, Windows
+          may warn that the file came from the internet: choose Run (or
+          "More info", then "Run anyway").
 Mac:      double-click "Start LUOM What's New.command". The first time,
-          macOS may say it is from an unidentified developer: right-click
-          the file, choose Open, then Open again.
+          macOS may refuse because it is from an unidentified developer.
+          Open System Settings > Privacy & Security, scroll down, click
+          "Open Anyway" next to the message about the file, and confirm.
+          (On macOS 14 and older, right-clicking the file and choosing
+          Open, then Open again, also works.)
 Linux:    open a terminal in this folder and run  ./start-luom-whatsnew.sh
 
 Your web browser opens the LUOM What's New page. The very first time, it
@@ -86,6 +99,29 @@ Two options sit under the search filters, and the page remembers them:
   - "Open articles in" - a separate browser window beside the program
     (the default; the same window is reused for every article), the
     same browser tab each time, or a new tab each time.
+
+
+UPDATES
+-------
+
+Once a day the program asks GitHub whether a newer version has been
+released. If there is one, a green bar at the top of the page says so:
+
+  - "Update now" downloads it, checks it against GitHub's published
+    checksum, replaces the program files in this folder and restarts.
+    The page reloads by itself. Your data, shortcuts and scheduled
+    checks are not affected.
+  - "What's new" shows the release notes.
+  - "Skip this version" hides the bar until the next version comes out.
+
+To stop checking, untick "Check for program updates" under the search
+filters. To check right away, open About (the (i) button) and click
+"Check for updates".
+
+To update by hand instead, download the new zip from
+https://github.com/LeeGillie/LUOM-WhatsNew/releases/latest
+and extract it over this folder, replacing the files. Use the same
+folder, so shortcuts and scheduled checks keep working.
 
 
 A DESKTOP SHORTCUT WITH THE LUOM ICON (WINDOWS, OPTIONAL)
