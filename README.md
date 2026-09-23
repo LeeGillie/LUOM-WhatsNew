@@ -112,6 +112,8 @@ It unpacks to one folder:
 | `Start LUOM What's New.command` | macOS: double-click to start |
 | `start-luom-whatsnew.sh` | Linux |
 | `README.txt` | instructions written for end users |
+| `LUOM-WhatsNew.ico` | LUOM icon, for a desktop / Start menu shortcut |
+| `LICENSE.txt` | the MIT license |
 
 The launchers look for Python 3.8+. If it's missing, they explain that and
 **ask** before installing it. Windows uses `winget install Python.Python.3.12

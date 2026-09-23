@@ -13,6 +13,7 @@ Produces, under dist/:
         start-luom-whatsnew.sh          Linux launcher
         README.txt                      end-user instructions
         LUOM-WhatsNew.ico               LUOM icon, for a desktop / Start menu shortcut
+        LICENSE.txt                     MIT license (it must travel with every copy)
     LUOM-WhatsNew-<version>.zip         that folder, zipped
 
 Standard library only (zipapp). The .pyz runs on any Python 3.8+.
@@ -88,6 +89,7 @@ def main() -> int:
             executables.add(name)
 
     shutil.copy2(os.path.join(PACKAGING, APP_NAME + ".ico"), os.path.join(bundle, APP_NAME + ".ico"))
+    write_text(os.path.join(ROOT, "LICENSE"), os.path.join(bundle, "LICENSE.txt"), "\r\n")
 
     # Zip by hand so the macOS/Linux launchers keep their executable bit
     # even when the zip is built on Windows.
