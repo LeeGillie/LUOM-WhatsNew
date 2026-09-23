@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+
+# Output now lives in the shared app data folder (see README); ignore any
+# leftovers from older versions that wrote to ./data.
+data/
+
+dist/
+
+# Session handoff notes, local only
+HANDOFF.md

@@ -1,0 +1,9 @@
+# No third-party runtime dependencies.
+#
+# wecreat_index uses only the Python standard library (urllib, json, re, gzip),
+# so `python -m wecreat_index` works on a bare Python 3.8+ install with no
+# virtual environment and no network install step.
+#
+# Optional, for editing comfort in VS Code:
+# ruff
+# mypy

@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LUOM What's New</title>
+  <meta name="description" content="An independent index of the Lumos Ultra articles in WeCreat's public knowledge base, newest first. A free LUOM community tool, not affiliated with WeCreat.">
+  <link rel="icon" href="assets/favicon-64.png" type="image/png">
+  <link rel="stylesheet" href="app.css">
+  <script>
+    /* The splash shows once per browser tab: skip it on reloads. */
+    try { if (sessionStorage.getItem("luom-splash-shown")) document.documentElement.classList.add("no-splash"); } catch (e) {}
+  </script>
+</head>
+<body>
+  <!-- ======================= Splash ======================= -->
+  <div class="splash" id="splash" role="img" aria-label="LUOM - Lumos Ultra Owners &amp; Makers. Independent community utility.">
+    <div class="splash-foot">
+      <div class="progress-track"><div class="progress-bar"></div></div>
+      <span class="splash-text">Independent community index of help.wecreat.com &middot; loading&hellip;</span>
+    </div>
+  </div>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <img class="brand-logo" src="assets/logo-256.webp" width="48" height="48" alt="LUOM - Lumos Ultra Owners &amp; Makers">
+        <div>
+          <h1>What's New for the Lumos Ultra</h1>
+          <p class="brand-sub">Independent LUOM index of WeCreat's public help articles</p>
+        </div>
+      </div>
+
+      <div class="scan-box">
+        <div class="last-run" id="lastRunBox">
+          <span class="last-run-label">Last downloaded</span>
+          <time id="lastRun">&mdash;</time>
+          <span class="last-run-rel" id="lastRunRel"></span>
+        </div>
+        <a class="btn btn-community" href="https://www.facebook.com/groups/lumosultraownersmakers" target="_blank" rel="noopener" title="Open the Lumos Ultra Owners &amp; Makers group on Facebook">
+          <svg class="btn-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="7" cy="7" r="2.6" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="13.6" cy="7.6" r="2.1" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M2.5 16c.6-2.7 2.3-4.2 4.5-4.2s3.9 1.5 4.5 4.2M12 12.1c.5-.2 1-.3 1.6-.3 1.8 0 3.2 1.3 3.7 3.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          <span class="btn-text">LUOM on Facebook</span>
+        </a>
+        <button type="button" class="btn btn-primary" id="scanBtn">
+          <span class="spinner" aria-hidden="true"></span>
+          <svg class="btn-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M16.5 10a6.5 6.5 0 1 1-2-4.7M16.5 3.5v3.8h-3.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="btn-text">Run scan</span>
+        </button>
+        <button type="button" class="btn btn-ghost btn-icon-only" id="aboutBtn" title="About this tool and its sources" aria-label="About this tool and its sources">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10 9v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="10" cy="6.3" r="1.1" fill="currentColor"/></svg>
+        </button>
+        <button type="button" class="btn btn-ghost btn-icon-only" id="exitBtn" title="Exit LUOM What's New" aria-label="Exit LUOM What's New">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v7M6.2 5.6a6 6 0 1 0 7.6 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <section class="scan-panel" id="scanPanel" hidden aria-live="polite">
+      <div class="scan-panel-head">
+        <span class="scan-panel-title">Scan output</span>
+        <span class="scan-panel-status" id="scanStatus"></span>
+        <button type="button" class="btn btn-ghost btn-sm" id="scanPanelClose" aria-label="Hide scan output">Hide</button>
+      </div>
+      <pre class="scan-log" id="scanLog"></pre>
+    </section>
+
+    <nav class="tabs topbar-inner" role="tablist" aria-label="Views">
+      <button type="button" role="tab" class="tab" id="tabBtn-articles" data-tab="articles" aria-selected="true" aria-controls="tab-articles">
+        Articles <span class="tab-count" id="countArticles">0</span>
+        <span class="tab-new" id="countNew" hidden></span>
+      </button>
+      <button type="button" role="tab" class="tab" id="tabBtn-state" data-tab="state" aria-selected="false" aria-controls="tab-state">
+        Scan state <span class="tab-count" id="countState">0</span>
+      </button>
+    </nav>
+  </header>
+
+  <main class="page">
+    <!-- ======================= Articles ======================= -->
+    <section id="tab-articles" role="tabpanel" aria-labelledby="tabBtn-articles">
+      <div class="news-strip" id="newsStrip" hidden></div>
+
+      <form class="filters" id="filters" autocomplete="off" onsubmit="return false">
+        <div class="filters-top">
+          <div class="search">
+            <label class="sr-only" for="fScope">Search in</label>
+            <select id="fScope" class="search-scope" title="Search in">
+              <option value="all">Everything</option>
+              <option value="title">Title</option>
+              <option value="text">Article text</option>
+              <option value="excerpt">Excerpt</option>
+              <option value="categories">Categories</option>
+              <option value="reasons">Match reasons</option>
+              <option value="url">URL / slug</option>
+              <option value="id">Article ID</option>
+            </select>
+            <svg class="search-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M13 13l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <label class="sr-only" for="fQuery">Search</label>
+            <input id="fQuery" type="search" placeholder="Search titles and article text…  &quot;exact phrase&quot;  -exclude" spellcheck="false">
+            <kbd class="search-kbd" title="Press / to search">/</kbd>
+          </div>
+          <div class="field field-sort">
+            <label for="fSort">Sort by</label>
+            <select id="fSort">
+              <option value="published-desc">Published · newest first</option>
+              <option value="published-asc">Published · oldest first</option>
+              <option value="modified-desc">Last modified · newest first</option>
+              <option value="firstseen-desc">First seen by scanner · newest</option>
+              <option value="confidence">Confidence · direct first</option>
+              <option value="title-asc">Title · A to Z</option>
+              <option value="title-desc">Title · Z to A</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filters-grid">
+          <div class="field">
+            <label for="fSection">Section</label>
+            <select id="fSection"></select>
+          </div>
+          <div class="field field-wide">
+            <label for="fCategory">Category</label>
+            <select id="fCategory"></select>
+          </div>
+          <div class="field">
+            <label for="fTopic">Topic</label>
+            <select id="fTopic"></select>
+          </div>
+          <div class="field">
+            <label for="fConfidence">Confidence</label>
+            <select id="fConfidence"></select>
+          </div>
+          <div class="field">
+            <label for="fStatus">Status</label>
+            <select id="fStatus"></select>
+          </div>
+          <div class="field">
+            <label for="fRule">Matched by</label>
+            <select id="fRule"></select>
+          </div>
+          <div class="field">
+            <label for="fYear">Published year</label>
+            <select id="fYear"></select>
+          </div>
+          <div class="field" id="fTagField" hidden>
+            <label for="fTag">Tag</label>
+            <select id="fTag"></select>
+          </div>
+          <div class="field">
+            <label for="fFrom">Published from</label>
+            <input id="fFrom" type="date">
+          </div>
+          <div class="field">
+            <label for="fTo">Published to</label>
+            <input id="fTo" type="date">
+          </div>
+        </div>
+
+        <div class="view-options">
+          <label class="check">
+            <input type="checkbox" id="optShowOther">
+            <span>Show articles not about the Lumos Ultra</span>
+          </label>
+          <label class="inline-field">
+            <span>Open articles in</span>
+            <select id="optLinkMode">
+              <option value="window">a separate browser window</option>
+              <option value="reuse">the same browser tab each time</option>
+              <option value="new">a new browser tab each time</option>
+            </select>
+          </label>
+          <span class="muted view-options-note">Remembered in this browser.</span>
+        </div>
+      </form>
+
+      <p class="source-note">
+        Articles belong to WeCreat and are shown here only as titles and short excerpts, each linking to the original on
+        <a href="https://help.wecreat.com" target="_blank" rel="noopener">help.wecreat.com</a>.
+        LUOM does not write or maintain WeCreat's knowledge base &mdash; this tool only indexes, searches and catalogs it.
+        <button type="button" class="link-btn" data-open-about>About</button>
+      </p>
+
+      <div class="result-bar">
+        <span class="result-count" id="resultCount"></span>
+        <div class="chips" id="activeChips"></div>
+        <button type="button" class="btn btn-ghost btn-sm" id="clearFilters" hidden>Clear filters</button>
+      </div>
+
+      <div class="list" id="list" aria-live="polite"></div>
+    </section>
+
+    <!-- ======================= Scan state ======================= -->
+    <section id="tab-state" role="tabpanel" aria-labelledby="tabBtn-state" hidden>
+      <div class="tiles" id="stateTiles"></div>
+
+      <h2 class="section-title">Changes in the last run</h2>
+      <div class="changes" id="stateChanges"></div>
+
+      <div class="state-head">
+        <h2 class="section-title">Tracked articles <span class="muted" id="stateSub"></span></h2>
+        <div class="state-tools">
+          <div class="search search-sm">
+            <svg class="search-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M13 13l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <label class="sr-only" for="sQuery">Filter tracked articles</label>
+            <input id="sQuery" type="search" placeholder="Filter by title or ID" spellcheck="false">
+          </div>
+          <label class="sr-only" for="sConfidence">Confidence</label>
+          <select id="sConfidence">
+            <option value="">All confidence</option>
+            <option value="direct">Direct</option>
+            <option value="likely">Likely</option>
+            <option value="other">Not Lumos Ultra</option>
+          </select>
+          <label class="sr-only" for="sSeen">Seen</label>
+          <select id="sSeen">
+            <option value="">Any first-seen run</option>
+            <option value="last">First seen in the last run</option>
+            <option value="earlier">Seen before the last run</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="state-table" id="stateTable">
+          <thead>
+            <tr>
+              <th data-key="title" class="col-title"><button type="button">Title</button></th>
+              <th data-key="confidence"><button type="button">Confidence</button></th>
+              <th data-key="published_iso"><button type="button">Published</button></th>
+              <th data-key="modified_iso"><button type="button">Modified</button></th>
+              <th data-key="first_seen"><button type="button">First seen</button></th>
+              <th data-key="last_seen"><button type="button">Last seen</button></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="muted state-foot"><code>state.json</code> is the baseline each scan compares against to decide what is new or updated. Data folder: <code id="stateDataDir">—</code></p>
+    </section>
+  </main>
+
+  <footer class="site-foot">
+    <img src="assets/logo-256.webp" width="40" height="40" alt="" aria-hidden="true">
+    <p>
+      <strong>LUOM What's New</strong> <span id="appVersion"></span> is a free indexer, searcher and cataloger made for members of
+      <a href="https://www.facebook.com/groups/lumosultraownersmakers" target="_blank" rel="noopener">Lumos Ultra Owners &amp; Makers (LUOM)</a> on Facebook.
+      <br><span class="muted">Not affiliated with, endorsed by or sponsored by WeCreat. LUOM does not write, maintain, host or own WeCreat's
+      knowledge base; the articles are WeCreat's and are linked at help.wecreat.com. WeCreat, Lumos Ultra and MakeIt are names of their
+      owner, used only to say what this tool works with.</span>
+      <button type="button" class="link-btn" data-open-about>About &amp; disclaimer</button>
+    </p>
+  </footer>
+
+  <!-- ======================= About ======================= -->
+  <dialog class="modal modal-about" id="about" aria-labelledby="aboutTitle">
+    <div class="modal-body">
+      <img class="modal-logo" src="assets/logo-256.webp" width="72" height="72" alt="LUOM - Lumos Ultra Owners &amp; Makers">
+      <h2 id="aboutTitle">About LUOM What's New</h2>
+      <p>
+        LUOM What's New is a free, independent tool made by and for members of the
+        <a href="https://www.facebook.com/groups/lumosultraownersmakers" target="_blank" rel="noopener">Lumos Ultra Owners &amp; Makers (LUOM)</a> Facebook group.
+        It is an <strong>indexer, searcher and cataloger</strong>: it reads WeCreat's public knowledge base at
+        <a href="https://help.wecreat.com" target="_blank" rel="noopener">help.wecreat.com</a>, lists the articles that
+        concern the Lumos Ultra, notes what is new or changed, and links you to each original article.
+      </p>
+      <h3>What it is not</h3>
+      <ul>
+        <li><strong>LUOM does not write, maintain, host or own WeCreat's knowledge base.</strong> We cannot correct, update or remove any article.</li>
+        <li>This tool is <strong>not affiliated with, endorsed by or sponsored by WeCreat</strong>, and it is not an official WeCreat product or support channel.</li>
+        <li>For official help, warranty or support questions, contact WeCreat through <a href="https://help.wecreat.com" target="_blank" rel="noopener">help.wecreat.com</a>.</li>
+      </ul>
+      <h3>Whose content this is</h3>
+      <ul>
+        <li>The articles &mdash; their text, titles, images and videos &mdash; belong to WeCreat. This tool shows only titles and short excerpts, each linked to the original, so always read the full, current article on WeCreat's site.</li>
+        <li>The index is kept on your own computer for your personal use. Please do not republish articles or share the index files.</li>
+        <li>WeCreat, Lumos Ultra and MakeIt are names and trademarks of their owner. They are used here only to describe what this tool works with.</li>
+        <li>The LUOM name and artwork belong to the LUOM community.</li>
+      </ul>
+      <p class="muted">Version <span id="aboutVersion">&mdash;</span>. Provided free, as is, without any warranty.</p>
+      <div class="modal-actions">
+        <a class="btn btn-community" href="https://www.facebook.com/groups/lumosultraownersmakers" target="_blank" rel="noopener">LUOM on Facebook</a>
+        <button type="button" class="btn btn-primary" id="aboutClose" autofocus>Close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ======================= First run ======================= -->
+  <dialog class="modal" id="firstRun" aria-labelledby="frTitle" aria-describedby="frIntro">
+    <div class="modal-body">
+      <img class="modal-logo" src="assets/logo-256.webp" width="72" height="72" alt="LUOM - Lumos Ultra Owners &amp; Makers">
+      <h2 id="frTitle">No index data yet</h2>
+      <p id="frIntro">There is no index of WeCreat's knowledge base on this computer yet, so there is nothing to show.</p>
+      <p>The first download reads the public help site (<strong>help.wecreat.com</strong>), keeps every article relevant to the Lumos Ultra, and saves the index in:</p>
+      <code class="modal-path" id="frDataDir">…</code>
+      <p class="muted">It usually takes a few seconds. Every later scan is compared with this one, so new and updated articles can be highlighted for you.</p>
+      <p class="muted">LUOM What's New is a free, independent tool made for members of the <a href="https://www.facebook.com/groups/lumosultraownersmakers" target="_blank" rel="noopener">Lumos Ultra Owners &amp; Makers</a> Facebook group.
+        It only indexes and links to WeCreat's articles &mdash; LUOM does not maintain WeCreat's knowledge base and is not affiliated with WeCreat.</p>
+
+      <div class="modal-progress" id="frProgress" hidden>
+        <div class="progress-track"><div class="progress-bar"></div></div>
+        <pre class="modal-log" id="frLog"></pre>
+      </div>
+      <p class="modal-error" id="frError" role="alert" hidden></p>
+
+      <div class="modal-actions">
+        <button type="button" class="btn" id="frExit">Exit program</button>
+        <button type="button" class="btn btn-primary" id="frGo" autofocus>Download index now</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ======================= Stopped ======================= -->
+  <div class="stopped" id="stopped" hidden>
+    <div class="stopped-card">
+      <img src="assets/logo-256.webp" width="96" height="96" alt="LUOM - Lumos Ultra Owners &amp; Makers">
+      <h2>LUOM What's New has stopped</h2>
+      <p>You can close this browser tab.</p>
+      <p class="muted">To use it again, start LUOM What's New the same way you did before.</p>
+      <p><a class="btn btn-community" href="https://www.facebook.com/groups/lumosultraownersmakers" target="_blank" rel="noopener">LUOM on Facebook</a></p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

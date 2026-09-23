@@ -1,0 +1,54 @@
+{
+  "_comment": "Overrides for wecreat_index/config.py. Delete a key to fall back to the built-in default. Patterns are case-insensitive regular expressions.",
+
+  "site": "https://help.wecreat.com",
+  "post_type": "lsvr_kba",
+  "category_taxonomy": "lsvr_kba_cat",
+  "tag_taxonomy": "lsvr_kba_tag",
+
+  "profile": "broad",
+
+  "direct_category_patterns": [
+    "lumos[\\s_-]*ultra"
+  ],
+
+  "direct_text_patterns": [
+    "lumos[\\s_-]*ultra"
+  ],
+
+  "related_category_patterns": [
+    "makeit[\\s_-]*software",
+    "software[\\s_-]*user[\\s_-]*manual",
+    "mopa[\\s_-]*laser[\\s_-]*module",
+    "smoke[\\s_-]*purifier",
+    "fume[\\s_-]*extractor",
+    "auto[\\s_-]*pass[\\s_-]*through[\\s_-]*feeder",
+    "autoflow[\\s_-]*conveyor"
+  ],
+
+  "software_topic_patterns": [
+    "test[\\s_-]*(grid|array)",
+    "array[\\s_-]*test",
+    "(material|colou?r|parameter)[\\s_-]*test",
+    "colou?r[\\s_-]*engrav",
+    "pulse[\\s_-]*width"
+  ],
+
+  "other_machine_category_patterns": [
+    "vision",
+    "vista",
+    "lumos[\\s_-]*flex",
+    "wecreat-lumos$",
+    "features-wecreat-lumos",
+    "maintenance-wecreat-lumos",
+    "materials-settings-wecreat-lumos",
+    "troubleshooting-wecreat-lumos",
+    "user-manual-wecreat-lumos",
+    "lumos-getting-started",
+    "slide-extension-for-lumos-lumos-flex"
+  ],
+
+  "page_size": 100,
+  "request_timeout": 45,
+  "max_retries": 4
+}

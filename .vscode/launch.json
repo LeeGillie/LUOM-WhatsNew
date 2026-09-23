@@ -1,0 +1,62 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Web UI (browse + scan)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "wecreat_index.server",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "justMyCode": true
+    },
+    {
+      "name": "Scan KB (broad)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "wecreat_index",
+      "args": [
+        "--profile",
+        "broad"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "justMyCode": true
+    },
+    {
+      "name": "Scan KB (strict)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "wecreat_index",
+      "args": [
+        "--profile",
+        "strict"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Scan KB (dry run, verbose)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "wecreat_index",
+      "args": [
+        "--dry-run",
+        "--verbose"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Scan KB (reset baseline)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "wecreat_index",
+      "args": [
+        "--reset"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
