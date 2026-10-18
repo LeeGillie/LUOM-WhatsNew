@@ -212,8 +212,10 @@ HTML/CSS/JS with no CDN, so it works offline.
 * **Scan state** tab: the `state.json` baseline, meaning run count, last and
   previous run, what the last run found new / updated / dropped, and a sortable,
   filterable table of every tracked article.
-* **Run scan** button runs `python -m wecreat_index` in the background and
-  streams its output into the page. When it finishes, the list reloads. The
+* **Run scan** button runs `python -m wecreat_index` (packaged:
+  `LUOM-WhatsNew.pyz scan`) in the background and streams its output into the
+  page. The child runs in the data folder; from a source checkout the server
+  puts the checkout on its `PYTHONPATH` so the package is still found. When it finishes, the list reloads. The
   label beside it shows when the data was last downloaded
   (`index.json`'s `generated_at`). The power button next to it exits the
   program.
@@ -434,7 +436,7 @@ LUOM-WhatsNew\
     test_paths.py   data-folder choice and migration
     test_app.py     .pyz entry point, the build itself, second-launch handling
     test_update.py  update check, verified install, refusal cases
-                    (78 tests in all, offline)
+                    (79 tests in all, offline)
   .vscode\          launch, tasks, settings
   build.py          builds dist\LUOM-WhatsNew.pyz and the zip to share
   config.json       editable match rules

@@ -40,7 +40,8 @@ from urllib.parse import urlsplit
 
 from . import NOTICE, __version__
 from . import update
-from .paths import default_data_dir, find_config, has_data, migrate_legacy_data, scan_command
+from .paths import (PROJECT_ROOT, ZIPPED, default_data_dir, find_config, has_data,
+                    migrate_legacy_data, scan_command)
 from .store import INDEX_FILENAME, STATE_FILENAME
 
 log = logging.getLogger("wecreat_index.server")
@@ -108,6 +109,10 @@ class ScanRunner:
     def _run(self) -> None:
         cmd = scan_command(self.out_dir, self.config_path)
         env = dict(os.environ, PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8")
+        if not ZIPPED:
+            # The child runs in the data folder, so "-m wecreat_index" needs
+            # the source checkout on its path to find the package.
+            env["PYTHONPATH"] = os.pathsep.join(filter(None, [PROJECT_ROOT, env.get("PYTHONPATH")]))
         # No console window flashing up when started from pythonw on Windows.
         flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
         code = -1

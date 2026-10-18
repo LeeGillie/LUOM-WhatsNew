@@ -85,6 +85,17 @@ class ConfigAndCommandTests(unittest.TestCase):
         self.assertEqual(cmd[1:3], ["/x/LUOM-WhatsNew.pyz", "scan"])
         self.assertEqual(cmd[-2:], ["--config", "cfg.json"])
 
+    def test_scan_child_finds_the_package_from_the_data_folder(self):
+        # The child runs in the data folder, not the checkout (the 1.1.0 bug).
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        runner = server.ScanRunner(tmp, None)
+        probe = [sys.executable, "-c", "import wecreat_index; print('imported')"]
+        with mock.patch.object(server, "scan_command", return_value=probe):
+            runner._run()
+        self.assertEqual(runner.status()["exit_code"], 0, runner.lines)
+        self.assertEqual(runner.lines, ["imported"])
+
 
 class BuiltInRulesTests(unittest.TestCase):
     def test_config_json_matches_the_built_in_rules(self):
